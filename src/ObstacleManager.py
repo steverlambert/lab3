@@ -6,7 +6,6 @@ import Utils
 class ObstacleManager(object):
 
 	# Eliminating all obstacles with the power of GIT
-
 	def __init__(self, mapMsg, car_width, car_length, collision_delta):
 		self.map_info = mapMsg.info
 		self.mapImageGS = numpy.array(mapMsg.data, dtype=numpy.uint8).reshape(
