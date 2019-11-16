@@ -47,7 +47,25 @@ class ObstacleManager(object):
 		# square representing the robot is always aligned with the coordinate axes of the
 		# map for simplicity
 		# ----------------------------------------------------------
+
 		return True
+
+	# Discretize the path into N configurations, where N = path_length / self.collision_delta
+	#
+	# input: an edge represented by the start and end configurations
+	#
+	# return three variables:
+	# list_x - a list of x values of all intermediate points in the path
+	# list_y - a list of y values of all intermediate points in the path
+	# edgeLength - The euclidean distance between config1 and config2
+	def discretize_edge(self, config1, config2):
+		list_x, list_y = [], []
+		edgeLength = 0
+		# -----------------------------------------------------------
+		# YOUR CODE HERE
+		# -----------------------------------------------------------
+		return list_x, list_y, edgeLength
+
 
 	# Check if there is an unobstructed edge between the passed configs
 	# config1, config2: The configurations to check (in meters and radians)
@@ -58,7 +76,7 @@ class ObstacleManager(object):
 		#
 		# Check if endpoints are obstructed, if either is, return false
 		# Find path between two configs by connecting them with a straight line
-		# Discretize the path into N configurations, where N = path_length / self.collision_delta
+		# Discretize the path with the discretized_edge function above
 		# Check if all configurations along path are obstructed
 		# -----------------------------------------------------------
 
