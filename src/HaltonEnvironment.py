@@ -9,6 +9,7 @@ import GraphGenerator
 import networkx as nx
 from ObstacleManager import ObstacleManager
 
+
 class HaltonEnvironment(object):
 
     def __init__(self, mapMsg, graphFile, source, target, car_width, car_length, neighbor_radius, collision_delta):
@@ -26,14 +27,15 @@ class HaltonEnvironment(object):
             upper = [64, 75]
 
             G = GraphGenerator.euclidean_halton_graph(n, self.radius, bases, lower, upper, source, target, mapMsg,
-                                                       car_width, car_length, collision_delta)
+                                                      car_width, car_length, collision_delta)
             nx.write_graphml(G, "haltonGraph.graphml")
             self.graph = nx.read_graphml("haltonGraph.graphml")
 
         else:
             # Check if graph file exists
             if not os.path.isfile(graphFile):
-                print "ERROR: map file not found!"
+                print
+                "ERROR: map file not found!"
                 quit()
             self.graph = nx.read_graphml(graphFile)
 
@@ -54,7 +56,16 @@ class HaltonEnvironment(object):
     def get_successors(self, vid):
         successors = [int(i) for i in self.graph.neighbors(str(vid))]
         return successors
+        '''
+        freeSuccessors = []
+        for i in successors:
+          config1 = self.get_config(vid)
+          config2 = self.get_config(i)
+          if self.manager.get_edge_validity(config1, config2):
+            freeSuccessors.append(i)
 
+        return freeSuccessors
+        '''
 
     def get_state_validity(self, config2D):
         return self.manager.get_state_validity(config2D)
