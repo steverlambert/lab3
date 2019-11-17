@@ -34,6 +34,18 @@ class ObstacleManager(object):
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
 
+		x1 = config[0] + self.robotWidth/2
+		x2 = config[0] - self.robotWidth/2
+		y1 = config[1] + self.robotLength
+		y2 = config[1]
+
+		corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
+
+		for point in corners:
+			if self.mapImageBW[point[1]][point[0]] == 0:
+				return False
+		return True
+
 		# ---------------------------------------------------------
 		# YOUR CODE HERE
 		#
@@ -47,8 +59,6 @@ class ObstacleManager(object):
 		# square representing the robot is always aligned with the coordinate axes of the
 		# map for simplicity
 		# ----------------------------------------------------------
-
-		return True
 
 	# Discretize the path into N configurations, where N = path_length / self.collision_delta
 	#
@@ -64,6 +74,24 @@ class ObstacleManager(object):
 		# -----------------------------------------------------------
 		# YOUR CODE HERE
 		# -----------------------------------------------------------
+
+		distancex = config1[0] - config2[0]
+		distancey = config1[1] - config2[1]
+		distance = numpy.sqrt(numpy.abs(distancex)**2 + numpy.abs(distancey)**2)
+		N = int (distance / self.collision_delta)
+
+		counter = 0
+		for i in range(N):
+			length = self.collision_delta*counter
+			delta_x = (length/distance)*(distancex)
+			delta_y = (length/distance)*(distancey)
+
+			list_x.append(config2[0] + delta_x)
+			list_y.append(config2[1] + delta_y)
+			counter += 1
+
+		edgeLength = distance
+
 		return list_x, list_y, edgeLength
 
 
@@ -71,6 +99,13 @@ class ObstacleManager(object):
 	# config1, config2: The configurations to check (in meters and radians)
 	# Returns false if obstructed edge, True otherwise
 	def get_edge_validity(self, config1, config2):
+
+		edges = self.discretize_edge(config1, config2)
+		for edge in edges:
+			if not self.get_state_validity(edge):
+				return False
+
+
 		# -----------------------------------------------------------
 		# YOUR CODE HERE
 		#
