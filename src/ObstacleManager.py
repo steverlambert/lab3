@@ -42,7 +42,7 @@ class ObstacleManager(object):
 		corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
 
 		for point in corners:
-			if self.mapImageBW[point[0]][point[1]] == 0:
+			if self.mapImageBW[point[1]][point[0]] == 0:
 				return False
 		return True
 
