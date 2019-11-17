@@ -34,15 +34,15 @@ class ObstacleManager(object):
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
 
-		x1 = config[0] + self.robotWidth/2
-		x2 = config[0] - self.robotWidth/2
-		y1 = config[1] + self.robotLength
-		y2 = config[1]
+		x1 = int (numpy.ceil(config[0] + self.robotWidth/2))
+		x2 = int (numpy.ceil(config[0] - self.robotWidth/2))
+		y1 = int (numpy.ceil(config[1] + self.robotLength))
+		y2 = int (config[1])
 
 		corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
 
 		for point in corners:
-			if self.mapImageBW[point[1]][point[0]] == 0:
+			if self.mapImageBW[point[0]][point[1]] == 0:
 				return False
 		return True
 
@@ -100,9 +100,9 @@ class ObstacleManager(object):
 	# Returns false if obstructed edge, True otherwise
 	def get_edge_validity(self, config1, config2):
 
-		edges = self.discretize_edge(config1, config2)
-		for edge in edges:
-			if not self.get_state_validity(edge):
+		list_x, list_y, edge_length = self.discretize_edge(config1, config2)
+		for i in range(len(list_x)):
+			if not self.get_state_validity([list_x[i], list_y[i]]):
 				return False
 
 

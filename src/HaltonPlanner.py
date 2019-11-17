@@ -34,8 +34,6 @@ class HaltonPlanner(object):
         min_node = 0
         minf = 1000
 
-        print "made it to our function"
-
         while current_node != self.tid:
             frontier = self.planningEnv.get_successors(current_node)
 
@@ -49,13 +47,15 @@ class HaltonPlanner(object):
 
                 f = numpy.float64(cost_to_come + cost_to_go)
 
-                if f < minf:
-                    minf = f
-                    min_node = neighbor
+                n_config = self.planningEnv.get_config(neighbor)
+                cur_n_config = self.planningEnv.get_config(current_node)
+
+                if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
+                    if f < minf:
+                        minf = f
+                        min_node = neighbor
 
             #del self.open[current_node]
-            print "done with for loop"
-
 
             self.closed[current_node] = f
             self.parent[min_node] = current_node
@@ -64,8 +64,6 @@ class HaltonPlanner(object):
 
            #self.sid = current_node
 
-        print "done with while loop"
-        print "PARENTS: ", self.parent
         solution = self.get_solution(self.tid)
 
 
@@ -86,7 +84,6 @@ class HaltonPlanner(object):
         #   the node ids that you have found.
         # -------------------------------------------------------------
 
-        print "solution: ", solution
         return solution
 
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
