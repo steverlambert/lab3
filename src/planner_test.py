@@ -27,8 +27,11 @@ if __name__ == '__main__':
     rospy.wait_for_service(map_service_name)
     map_info = rospy.ServiceProxy(map_service_name, GetMap)().map.info
 
+    print "before wait for service"
     rospy.wait_for_service(PLANNER_SERVICE_TOPIC)
     get_plan = rospy.ServiceProxy(PLANNER_SERVICE_TOPIC, GetPlan)
+    print "got plan"
+
 
     try:
         resp = get_plan(Utils.map_to_world(SOURCE1, map_info), Utils.map_to_world(TARGET1, map_info))

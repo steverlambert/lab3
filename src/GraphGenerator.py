@@ -185,5 +185,5 @@ if __name__ == "__main__":
 
         # Generate the graph
         print 'Generating the graph'
-        G = euclidean_halton_graph(halton_points, disc_radius, bases, lower, upper, None, None, map_msg)
+        G = euclidean_halton_graph(halton_points, disc_radius, bases, lower, upper, None, None, map_msg,0,0,0)
         nx.write_graphml(G, riskmapFile)

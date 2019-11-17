@@ -26,6 +26,52 @@ class HaltonPlanner(object):
         self.gValues = {self.sid: 0}  # A mapping from node to shortest found path length to that node
         self.planIndices = []
         self.cost = 0
+
+        current_node = self.sid
+
+        cost_to_come = 0
+        cost_to_go = 0
+        min_node = 0
+        minf = 1000
+
+        print "made it to our function"
+
+        while current_node != self.tid:
+            frontier = self.planningEnv.get_successors(current_node)
+
+            for neighbor in frontier:
+                print "neighbor ", neighbor
+                print "target ", self.tid
+                neigh_to_target = self.planningEnv.get_distance(neighbor, self.tid)
+                start_to_neigh = self.planningEnv.get_distance(self.sid, neighbor)
+                cost_to_come = neigh_to_target + start_to_neigh
+
+                cost_to_go = self.planningEnv.get_heuristic(neighbor, self.tid)
+
+                f = numpy.float64(cost_to_come + cost_to_go)
+
+                if f < minf:
+                    minf = f
+                    min_node = neighbor
+
+                print 'f ', f, ' ', type(f)
+
+                print 'current node ', current_node, ' ', type(current_node)
+
+            del self.open[current_node]
+
+
+            self.closed[current_node] = f
+            current_node = min_node
+            self.parent[current_node] = self.sid
+
+           #self.sid = current_node
+
+        print "done with while loop"
+        solution = self.planningEnv.get_solution(self.tid)
+
+
+
         # ------------------------------------------------------------
         # YOUR CODE HERE
         #
@@ -42,7 +88,7 @@ class HaltonPlanner(object):
         #   the node ids that you have found.
         # -------------------------------------------------------------
 
-        return []
+        return solution
 
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
     def post_process(self, plan, timeout):
