@@ -40,11 +40,10 @@ class HaltonPlanner(object):
             frontier = self.planningEnv.get_successors(current_node)
 
             for neighbor in frontier:
-                print "neighbor ", neighbor
-                print "target ", self.tid
-                neigh_to_target = self.planningEnv.get_distance(neighbor, self.tid)
-                start_to_neigh = self.planningEnv.get_distance(self.sid, neighbor)
-                cost_to_come = neigh_to_target + start_to_neigh
+
+                #neigh_to_target = self.planningEnv.get_distance(neighbor, self.tid)
+                start_to_neigh = self.planningEnv.get_distance(current_node, neighbor)
+                cost_to_come = start_to_neigh
 
                 cost_to_go = self.planningEnv.get_heuristic(neighbor, self.tid)
 
@@ -54,21 +53,20 @@ class HaltonPlanner(object):
                     minf = f
                     min_node = neighbor
 
-                print 'f ', f, ' ', type(f)
-
-                print 'current node ', current_node, ' ', type(current_node)
-
-            del self.open[current_node]
+            #del self.open[current_node]
+            print "done with for loop"
 
 
             self.closed[current_node] = f
+            self.parent[min_node] = current_node
             current_node = min_node
-            self.parent[current_node] = self.sid
+
 
            #self.sid = current_node
 
         print "done with while loop"
-        solution = self.planningEnv.get_solution(self.tid)
+        print "PARENTS: ", self.parent
+        solution = self.get_solution(self.tid)
 
 
 
@@ -88,6 +86,7 @@ class HaltonPlanner(object):
         #   the node ids that you have found.
         # -------------------------------------------------------------
 
+        print "solution: ", solution
         return solution
 
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
