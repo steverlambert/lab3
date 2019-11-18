@@ -1,7 +1,12 @@
+#!/usr/bin/env python
 import cv2
 import math
 import numpy
 import Utils
+import rospy
+from nav_msgs.srv import GetMap
+import matplotlib.pyplot as plt
+
 
 class ObstacleManager(object):
 
@@ -13,8 +18,8 @@ class ObstacleManager(object):
 
 		# Retrieve the map dimensions
 		height, width, channels = self.mapImageGS.shape
-		self.mapHeight = height
-		self.mapWidth = width
+		self.mapHeight = height #1236
+		self.mapWidth = width #2792
 		self.mapChannels = channels
 
 		# Binarize the Image
@@ -31,20 +36,29 @@ class ObstacleManager(object):
 	# Returns False if in collision, True if not in collision
 	def get_state_validity(self, config):
 
+
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
+		#x1 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
+		#x2 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
+		#y1 = int (numpy.ceil(mapConfig[1] + self.robotLength))
+		#y2 = int (mapConfig[1])
 
-		x1 = int (numpy.ceil(config[0] + self.robotWidth/2))
-		x2 = int (numpy.ceil(config[0] - self.robotWidth/2))
-		y1 = int (numpy.ceil(config[1] + self.robotLength))
-		y2 = int (config[1])
+		if mapConfig[1] >= self.mapHeight or mapConfig[0] >= self.mapWidth:
+			return False
+		elif self.mapImageBW[mapConfig[1]][mapConfig[0]][0] == 0:
+			return False
+		else:
+			return True
 
-		corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
+		#corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
 
-		for point in corners:
-			if self.mapImageBW[point[1]][point[0]] == 0:
-				return False
-		return True
+		#for point in corners:
+		#	if point[1] >= self.mapHeight or point[0] >= self.mapWidth:
+		#		return False
+		#	elif self.mapImageBW[point[1]][point[0]] == 0:
+		#		return False
+		#return True
 
 		# ---------------------------------------------------------
 		# YOUR CODE HERE
@@ -105,7 +119,6 @@ class ObstacleManager(object):
 			if not self.get_state_validity([list_x[i], list_y[i]]):
 				return False
 
-
 		# -----------------------------------------------------------
 		# YOUR CODE HERE
 		#
@@ -114,11 +127,99 @@ class ObstacleManager(object):
 		# Discretize the path with the discretized_edge function above
 		# Check if all configurations along path are obstructed
 		# -----------------------------------------------------------
-
 		return True
-
 
 # Write Your Test Code For Debugging
 #if __name__ == '__main__':
 #	return
 	# Write test code here!
+
+if __name__ == '__main__':
+
+	print "Initializing node"
+	rospy.init_node("obstacle_manager", anonymous=True)  # Initialize the node
+	print "Initialized"
+
+	map_service_name = "static_map"
+	print "Getting map"
+
+	rospy.wait_for_service(map_service_name)
+	map_msg = rospy.ServiceProxy(map_service_name, GetMap)().map
+	map_info = map_msg.info
+
+	print "Got map"
+
+	car_width = 0.25
+	car_length = 0.33
+	collision_delta = .4
+
+	om = ObstacleManager(map_msg, car_width, car_length, collision_delta)
+
+	# Give time to get setup
+	rospy.sleep(1.0)
+
+	lower = numpy.array([map_info.origin.position.x, map_info.origin.position.y])
+	upper = numpy.array([map_info.origin.position.x + map_info.resolution * map_info.width,
+						 map_info.origin.position.y + map_info.resolution * map_info.height])
+
+	lowermap = Utils.world_to_map(lower, map_info)
+	uppermap = Utils.world_to_map(upper, map_info)
+
+	###### TEST FOR GET_STATE VALIDITY ######
+
+	x = int (upper[0]) #55
+	y = int (upper[1]) #24
+	print x,y
+
+	resultx = []
+	resulty = []
+	badx = []
+	bady = []
+
+	for i in range(0,x*100,10):
+		for j in range(0,y*100,10):
+			if om.get_state_validity([i/100.0,j/100.0]):
+				resultx.append(i)
+				resulty.append(j)
+			else:
+				badx.append(i)
+				bady.append(j)
+				#print("i: ", i)
+
+	rospy.sleep(1.0)
+
+	#
+	plt.xlabel('x')
+	plt.ylabel('y')
+	plt.scatter(resultx, resulty, c='w')
+	#plt.scatter(badx, bady, c='k')
+	#plt.show()
+
+	###### END OF TEST FOR GET_STATE_VALIDITY ######
+
+	###### TEST FOR DISCRETIZE EDGE ######
+
+	config1 = [[6,5], [20,18], [58,35]]
+	config2 = [[20,20], [25,19], [72,35]]
+
+	#plt.scatter(config1[0], config1[1], c='g')
+	#plt.scatter(config2[0], config2[1], c='r')
+
+	##### END OF TEST FOR DISCRETIZE EDGE #######
+
+
+	for i in range(len(config1)):
+		discx, discy, length = om.discretize_edge(config1[i], config2[i])
+		coordx = []
+		coordy = []
+		for j in range(len(discx)):
+			coord = Utils.world_to_map([discx[j],discy[j]], map_info)
+			coordx.append(coord[0])
+			coordy.append(coord[1])
+
+		if om.get_edge_validity(config1[i], config2[i]):
+			plt.scatter(coordx, coordy, c='g')
+		else:
+			plt.scatter(coordx, coordy, c='r')
+
+	plt.show()
