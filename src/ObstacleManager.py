@@ -35,21 +35,25 @@ class ObstacleManager(object):
 	# config: The configuration to check (in meters and radians)
 	# Returns False if in collision, True if not in collision
 	def get_state_validity(self, config):
-
-
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
-		#x1 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
-		#x2 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
-		#y1 = int (numpy.ceil(mapConfig[1] + self.robotLength))
-		#y2 = int (mapConfig[1])
+		x1 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
+		x2 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
+		y1 = int (numpy.ceil(mapConfig[1] - self.robotLength))
+		y2 = int (mapConfig[1])
+
+		#print "config: ", mapConfig
+		#print "box: ", x1,y1,x2,y2
+		box_sum = numpy.sum(self.mapImageBW[y1:y2,x1:x2])
 
 		if mapConfig[1] >= self.mapHeight or mapConfig[0] >= self.mapWidth:
+			#print "fail cause map limits"
 			return False
-		elif self.mapImageBW[mapConfig[1]][mapConfig[0]][0] == 0:
+		elif self.mapImageBW[mapConfig[1],mapConfig[0]] == 255:
 			return False
 		else:
 			return True
+
 
 		#corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
 
@@ -79,7 +83,7 @@ class ObstacleManager(object):
 	# input: an edge represented by the start and end configurations
 	#
 	# return three variables:
-	# list_x - a list of x values of all intermediate points in the path
+	# list_x - a list of x va	lues of all intermediate points in the path
 	# list_y - a list of y values of all intermediate points in the path
 	# edgeLength - The euclidean distance between config1 and config2
 	def discretize_edge(self, config1, config2):
@@ -151,7 +155,7 @@ if __name__ == '__main__':
 
 	car_width = 0.25
 	car_length = 0.33
-	collision_delta = .4
+	collision_delta = .2
 
 	om = ObstacleManager(map_msg, car_width, car_length, collision_delta)
 
@@ -169,21 +173,23 @@ if __name__ == '__main__':
 
 	x = int (upper[0]) #55
 	y = int (upper[1]) #24
-	print x,y
 
+	thexrange = numpy.linspace(0,x,500)
+	theyrange = numpy.linspace(0,y,220)
 	resultx = []
 	resulty = []
 	badx = []
 	bady = []
 
-	for i in range(0,x*100,10):
-		for j in range(0,y*100,10):
-			if om.get_state_validity([i/100.0,j/100.0]):
-				resultx.append(i)
-				resulty.append(j)
+	for i in thexrange:
+		for j in theyrange:
+			ijconfig = Utils.world_to_map([i,j], map_info)
+			if om.get_state_validity([i,j]):
+				resultx.append(ijconfig[0])
+				resulty.append(ijconfig[1])
 			else:
-				badx.append(i)
-				bady.append(j)
+				badx.append(ijconfig[0])
+				bady.append(ijconfig[1])
 				#print("i: ", i)
 
 	rospy.sleep(1.0)
@@ -191,16 +197,17 @@ if __name__ == '__main__':
 	#
 	plt.xlabel('x')
 	plt.ylabel('y')
-	plt.scatter(resultx, resulty, c='w')
-	#plt.scatter(badx, bady, c='k')
+	#plt.scatter(resultx, resulty, c='w')
+	plt.scatter(badx, bady, c='k')
 	#plt.show()
 
+	print "DONE PLOTTING MAP"
 	###### END OF TEST FOR GET_STATE_VALIDITY ######
 
 	###### TEST FOR DISCRETIZE EDGE ######
 
-	config1 = [[6,5], [20,18], [58,35]]
-	config2 = [[20,20], [25,19], [72,35]]
+	config1 = [[3.5,3.5], [10,8], [25,18], [38,16]]
+	config2 = [[7,8], [14,10], [35,18], [40.25,18.25]]
 
 	#plt.scatter(config1[0], config1[1], c='g')
 	#plt.scatter(config2[0], config2[1], c='r')
