@@ -6,7 +6,7 @@ from lab3.srv import *
 import Utils
 from nav_msgs.srv import GetMap
 
-PLANNER_SERVICE_TOPIC = '/planner_node/get_plan'
+PLANNER_SERVICE_TOPIC = 'planner_node/get_car_plan'
 
 # Testing pose sets:
 SOURCE1 = [156, 1080, 0.0]
