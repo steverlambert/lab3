@@ -39,26 +39,42 @@ class ObstacleManager(object):
 
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
-		#x1 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
-		#x2 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
-		#y1 = int (numpy.ceil(mapConfig[1] + self.robotLength))
-		#y2 = int (mapConfig[1])
 
-		if mapConfig[1] >= self.mapHeight or mapConfig[0] >= self.mapWidth:
-			return False
-		elif self.mapImageBW[mapConfig[1]][mapConfig[0]][0] == 0:
-			return False
-		else:
-			return True
+		x1 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
+		x2 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
+		y1 = int (numpy.ceil(mapConfig[1] + self.robotLength))
+		y2 = int (mapConfig[1])
 
-		#corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
+		#print mapConfig
+		#print x1,x2,y1,y2
 
-		#for point in corners:
-		#	if point[1] >= self.mapHeight or point[0] >= self.mapWidth:
-		#		return False
-		#	elif self.mapImageBW[point[1]][point[0]] == 0:
-		#		return False
-		#return True
+		#print self.mapImageBW[mapConfig[1]][mapConfig[0]][0]
+
+		# if mapConfig[1] >= self.mapHeight or mapConfig[0] >= self.mapWidth:
+		# 	print "Out of bounds"
+		# 	return True
+		# elif self.mapImageBW[mapConfig[1]][mapConfig[0]][0] == 0:
+		# 	#print "Conflict"
+		# 	return False
+		# else:
+		# 	return True
+
+		corners = [[x1,y1], [x1,y2], [x2, y1], [x2,y2]]
+
+		for point in corners:
+
+			if point[1] >= self.mapHeight or point[0] >= self.mapWidth:
+				#print self.mapWidth, self.mapHeight
+				#print "Out of bounds!"
+				return False
+			elif self.mapImageBW[point[1]][point[0]][0] == 255:
+				#print "Collision"
+				return False
+			else:
+				#print "Continue!"
+				continue
+
+		return True
 
 		# ---------------------------------------------------------
 		# YOUR CODE HERE
@@ -115,8 +131,11 @@ class ObstacleManager(object):
 	def get_edge_validity(self, config1, config2):
 
 		list_x, list_y, edge_length = self.discretize_edge(config1, config2)
+		#print len(list_x)
 		for i in range(len(list_x)):
-			if not self.get_state_validity([list_x[i], list_y[i]]):
+			test = self.get_state_validity([list_x[i], list_y[i]])
+			if not test:
+				#print "Obstructed"
 				return False
 
 		# -----------------------------------------------------------
@@ -147,6 +166,8 @@ if __name__ == '__main__':
 	map_msg = rospy.ServiceProxy(map_service_name, GetMap)().map
 	map_info = map_msg.info
 
+	print map_info
+
 	print "Got map"
 
 	car_width = 0.25
@@ -162,13 +183,20 @@ if __name__ == '__main__':
 	upper = numpy.array([map_info.origin.position.x + map_info.resolution * map_info.width,
 						 map_info.origin.position.y + map_info.resolution * map_info.height])
 
+	print "Map Info"
+	print lower, upper
+
 	lowermap = Utils.world_to_map(lower, map_info)
 	uppermap = Utils.world_to_map(upper, map_info)
+
+	print "World to Map"
+	print lowermap, uppermap
 
 	###### TEST FOR GET_STATE VALIDITY ######
 
 	x = int (upper[0]) #55
 	y = int (upper[1]) #24
+
 	print x,y
 
 	resultx = []
@@ -178,7 +206,10 @@ if __name__ == '__main__':
 
 	for i in range(0,x*100,10):
 		for j in range(0,y*100,10):
-			if om.get_state_validity([i/100.0,j/100.0]):
+			config = [i/100.0,j/100.0]
+			mapConfig = Utils.world_to_map(config, om.map_info)
+			#if om.get_state_validity([i/100.0,j/100.0]):
+			if not om.mapImageBW[mapConfig[1]][mapConfig[0]][0] == 0:
 				resultx.append(i)
 				resulty.append(j)
 			else:
@@ -186,12 +217,16 @@ if __name__ == '__main__':
 				bady.append(j)
 				#print("i: ", i)
 
+
 	rospy.sleep(1.0)
 
 	#
 	plt.xlabel('x')
 	plt.ylabel('y')
 	plt.scatter(resultx, resulty, c='w')
+
+	print "Plot dimensions"
+	print len(resultx), len(resulty)
 	#plt.scatter(badx, bady, c='k')
 	#plt.show()
 
@@ -207,15 +242,25 @@ if __name__ == '__main__':
 
 	##### END OF TEST FOR DISCRETIZE EDGE #######
 
+	## Something is funny with the world coordinates in this test. I'm getting "out of bounds"
+	## for the line on the far right, which leads me to believe that the others are misaligned
+	# somehow. That could explain why they are reporting collisions when we don't see anything
+
 
 	for i in range(len(config1)):
+	#for i in range(1):
 		discx, discy, length = om.discretize_edge(config1[i], config2[i])
+		print(len(discx))
 		coordx = []
 		coordy = []
 		for j in range(len(discx)):
 			coord = Utils.world_to_map([discx[j],discy[j]], map_info)
 			coordx.append(coord[0])
 			coordy.append(coord[1])
+
+		print(len(coordx))
+
+		#plt.scatter(coordx, coordy, c='g')
 
 		if om.get_edge_validity(config1[i], config2[i]):
 			plt.scatter(coordx, coordy, c='g')
