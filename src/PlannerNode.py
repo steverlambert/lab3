@@ -199,7 +199,7 @@ class PlannerNode(object):
       
       if self.cur_plan is not None:
         self.cur_plan = self.add_orientation(self.cur_plan)
-        #self.cur_plan = self.planner.post_process(self.cur_plan, 5)
+        self.cur_plan = self.planner.post_process(self.cur_plan, 5)
         print '[Planner Node] ...plan complete'
       else:
         print '[Planner Node] ...could not compute a plan'
