@@ -43,6 +43,8 @@ class HaltonPlanner(object):
             min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
             current_node  = min_key
 
+            #frontier = self.planningEnv.get_successors(current_node)
+
             if current_node == self.tid:
                 break
 
@@ -107,6 +109,7 @@ class HaltonPlanner(object):
         t1 = time.time()
         elapsed = 0
         while elapsed < timeout:  # Keep going until out of time
+        #while elapsed ==0:
             # ---------------------------------------------------------
             # YOUR CODE HERE
 
@@ -140,24 +143,45 @@ class HaltonPlanner(object):
                 #print i, j
                 #plan[index_i:index_j+1] = betterplan
                 #del plan[(index_i + 1):index_j]
-                numpy.delete(plan, slice(index_i+1,index_j), 0)
+                plan = numpy.delete(plan, slice(index_i+1,index_j), 0)
+
+                #print plan
 
                 #shorten plan
 
 
-            # Pick random id i
-            # Pick random id j
-            # Redraw if i == j
-            # Switch i and j if i > j
+                # Pick random id i
+                # Pick random id j
+                # Redraw if i == j
+                # Switch i and j if i > j
 
-            # if we can find path between i and j (Hint: look inside ObstacleManager.py for a suitable function)
-            # Get the path
-            # Reformat the plan such that the new path is inserted and the old section of the path is removed between i and j
-            # Be sure to CAREFULLY inspect the data formats of both the original plan and the plan returned
-            # to ensure that you edit the path correctly
+                # if we can find path between i and j (Hint: look inside ObstacleManager.py for a suitable function)
+                # Get the path
+                # Reformat the plan such that the new path is inserted and the old section of the path is removed between i and j
+                # Be sure to CAREFULLY inspect the data formats of both the original plan and the plan returned
+                # to ensure that you edit the path correctly
 
-            elapsed = time.time() - t1
-        return plan
+                elapsed = time.time() - t1
+
+        # Loop through plan and discretize edges
+        tmp_idx = 0
+        plan2 = plan
+        for idx in range(len(plan)-1):
+            print "Here!"
+            i = plan[idx]
+            j = plan[idx+1]
+
+            list_x, list_y, edge_length = self.planningEnv.manager.discretize_edge(i, j)
+
+            betterplan = numpy.zeros((len(list_x),3))
+            betterplan[:,0] = list_x
+            betterplan[:,1] = list_y
+
+            plan2 = numpy.insert(plan2, tmp_idx, betterplan, axis=0)
+
+            tmp_idx += len(list_x)
+
+        return plan2
 
     # Backtrack across parents in order to recover path
     # vid: The id of the last node in the graph
