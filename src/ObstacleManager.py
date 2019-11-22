@@ -37,10 +37,10 @@ class ObstacleManager(object):
 	def get_state_validity(self, config):
 		# Convert the configuration to map-coordinates -> mapConfig is in pixel-space
 		mapConfig = Utils.world_to_map(config, self.map_info)
-		x1 = int (numpy.ceil(mapConfig[0] - self.robotWidth/2))
-		x2 = int (numpy.ceil(mapConfig[0] + self.robotWidth/2))
-		y1 = int (numpy.ceil(mapConfig[1] - self.robotLength))
-		y2 = int (mapConfig[1])
+		x1 = int (numpy.ceil(mapConfig[0] - self.robotLength/2))
+		x2 = int (numpy.ceil(mapConfig[0] + self.robotLength/2))
+		y1 = int (numpy.ceil(mapConfig[1] - self.robotLength/2))
+		y2 = int (mapConfig[1]+self.robotLength/2)
 
 		#print "config: ", mapConfig
 		#print "box: ", x1,y1,x2,y2
@@ -49,7 +49,7 @@ class ObstacleManager(object):
 		if mapConfig[1] >= self.mapHeight or mapConfig[0] >= self.mapWidth:
 			#print "fail cause map limits"
 			return False
-		elif self.mapImageBW[mapConfig[1],mapConfig[0]] == 255:
+		elif box_sum > 0: #self.mapImageBW[mapConfig[1],mapConfig[0]] == 255:
 			return False
 		else:
 			return True
@@ -83,7 +83,7 @@ class ObstacleManager(object):
 	# input: an edge represented by the start and end configurations
 	#
 	# return three variables:
-	# list_x - a list of x va	lues of all intermediate points in the path
+	# list_x - a list of x values of all intermediate points in the path
 	# list_y - a list of y values of all intermediate points in the path
 	# edgeLength - The euclidean distance between config1 and config2
 	def discretize_edge(self, config1, config2):
