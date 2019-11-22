@@ -28,37 +28,52 @@ class HaltonPlanner(object):
         self.cost = 0
 
         current_node = self.sid
+        self.open[current_node] = 0
 
         cost_to_come = 0
         cost_to_go = 0
         min_node = 0
-        minf = 1000
+        minf = 100000000
 
-        while current_node != self.tid:
+        while self.open: #current_node != self.tid:
             frontier = self.planningEnv.get_successors(current_node)
+
+            minf = 100000000
+
+            min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
+            current_node  = min_key
+
+            if current_node == self.tid:
+                break
 
             for neighbor in frontier:
 
+                #if neighbor in self.open
+                if neighbor not in self.closed:
+
                 #neigh_to_target = self.planningEnv.get_distance(neighbor, self.tid)
-                start_to_neigh = self.planningEnv.get_distance(current_node, neighbor)
-                cost_to_come = start_to_neigh
+                    start_to_neigh = self.planningEnv.get_distance(current_node, neighbor)
+                    cost_to_come = start_to_neigh
 
-                cost_to_go = self.planningEnv.get_heuristic(neighbor, self.tid)
+                    cost_to_go = self.planningEnv.get_heuristic(neighbor, self.tid)
 
-                f = numpy.float64(cost_to_come + cost_to_go)
+                    f = numpy.float64(cost_to_come + cost_to_go)
 
-                n_config = self.planningEnv.get_config(neighbor)
-                cur_n_config = self.planningEnv.get_config(current_node)
+                    self.open[current_node] = f
 
-                if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
-                    if f < minf:
-                        minf = f
-                        min_node = neighbor
+                    n_config = self.planningEnv.get_config(neighbor)
+                    cur_n_config = self.planningEnv.get_config(current_node)
 
-            #del self.open[current_node]
+                    if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
+                        if f < minf:
+                            minf = f
+                            min_node = neighbor
 
+            del self.open[current_node]
+            self.open[min_node] = f
             self.closed[current_node] = f
             self.parent[min_node] = current_node
+
             current_node = min_node
 
 
