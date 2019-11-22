@@ -98,7 +98,7 @@ class HaltonPlanner(object):
         #   of node ids, get_solution() will compute the actual path in SE(2) based off of
         #   the node ids that you have found.
         # -------------------------------------------------------------
-
+        #print solution
         return solution
 
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
@@ -111,6 +111,39 @@ class HaltonPlanner(object):
             # YOUR CODE HERE
 
             # Pseudocode
+            i = 0
+            j = 0
+            index_i = 0
+            index_j = 0
+
+            while (index_j == index_i):
+                index_i = numpy.random.randint(0, len(plan))
+                index_j = numpy.random.randint(0, len(plan))
+                i = plan[index_i]
+                j = plan[index_j]
+
+            if index_i > index_j:
+                temp = j
+                j = i
+                i = temp
+
+                temp_index = index_j
+                index_j = index_i
+                index_i = temp_index
+
+
+            if self.planningEnv.manager.get_edge_validity(i, j):
+
+                #betterplan = [plan[index_i],plan[index_j]]
+                #print betterplan
+                #print len(betterplan)
+                #print i, j
+                #plan[index_i:index_j+1] = betterplan
+                #del plan[(index_i + 1):index_j]
+                numpy.delete(plan, slice(index_i+1,index_j), 0)
+
+                #shorten plan
+
 
             # Pick random id i
             # Pick random id j
