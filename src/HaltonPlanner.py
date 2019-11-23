@@ -94,6 +94,68 @@ class HaltonPlanner(object):
 
         return solution
 
+
+    # Lazy A*
+    # Update to delay collision check until the last possible moment
+    def planLazyA(self):
+        self.sid = self.planningEnv.graph.number_of_nodes() - 2  # Get source id
+        self.tid = self.planningEnv.graph.number_of_nodes() - 1  # Get target id
+
+        self.closed = {}  # The closed list
+        self.parent = {self.sid: None}  # A dictionary mapping children to their parents
+        self.open = {self.sid: 0 + self.planningEnv.get_heuristic(self.sid, self.tid)}  # The open list
+        self.gValues = {self.sid: 0}  # A mapping from node to shortest found path length to that node
+        self.planIndices = []
+        self.cost = 0
+
+        # Continue searching while open set is not empty
+        while self.open: #current_node != self.tid:
+
+            # Set current_node to lowest cost in open set
+            min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
+            current_node  = min_key
+
+            # If current node is goal, we're done!
+            if current_node == self.tid:
+                break
+
+            # Else remove the current node from open and continue
+            del self.open[current_node]
+
+            # Get the frontier, set of neighbors in current node
+            # Circle the wagons... 
+            frontier = self.planningEnv.get_successors(current_node)
+
+            for neighbor in frontier:
+
+                if neighbor not in self.closed:
+
+                    # Calculate distance from start to neighbor thorugh current
+                    d = self.planningEnv.get_distance(current_node, neighbor) #start_to_neigh
+                    g = self.gValues[current_node] + d
+                    h = self.planningEnv.get_heuristic(neighbor, self.tid)
+                    f = numpy.float64(g + h) # Total cost f = g + h
+
+                    # If distance is less than existing gValue, record it!
+                    if (neighbor not in self.gValues) or (g < self.gValues[neighbor]):
+
+                        # Check for valid path after running calculations
+                        n_config = self.planningEnv.get_config(neighbor)
+                        cur_n_config = self.planningEnv.get_config(current_node)
+
+                        if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
+                            self.gValues[neighbor] = g
+                            self.parent[neighbor] = current_node
+                            self.open[neighbor] = f
+
+            # Close current node
+            self.closed[current_node] = f
+
+        solution = self.get_solution(self.tid)
+
+        return solution
+
+
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
     def post_process(self, plan, timeout):
 
