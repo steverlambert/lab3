@@ -110,6 +110,9 @@ class ObstacleManager(object):
 
 		edgeLength = distance
 
+		list_x.reverse()
+		list_y.reverse()
+
 		return list_x, list_y, edgeLength
 
 

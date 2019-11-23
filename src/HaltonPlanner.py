@@ -113,7 +113,6 @@ class HaltonPlanner(object):
             # ---------------------------------------------------------
             # YOUR CODE HERE
 
-            # Pseudocode
             i = 0
             j = 0
             index_i = 0
@@ -137,18 +136,7 @@ class HaltonPlanner(object):
 
             if self.planningEnv.manager.get_edge_validity(i, j):
 
-                #betterplan = [plan[index_i],plan[index_j]]
-                #print betterplan
-                #print len(betterplan)
-                #print i, j
-                #plan[index_i:index_j+1] = betterplan
-                #del plan[(index_i + 1):index_j]
                 plan = numpy.delete(plan, slice(index_i+1,index_j), 0)
-
-                #print plan
-
-                #shorten plan
-
 
                 # Pick random id i
                 # Pick random id j
@@ -165,9 +153,9 @@ class HaltonPlanner(object):
 
         # Loop through plan and discretize edges
         tmp_idx = 0
+        # Copy original
         plan2 = plan
         for idx in range(len(plan)-1):
-            print "Here!"
             i = plan[idx]
             j = plan[idx+1]
 
