@@ -27,64 +27,6 @@ class HaltonPlanner(object):
         self.planIndices = []
         self.cost = 0
 
-        current_node = self.sid
-        self.open[current_node] = 0
-
-        cost_to_come = 0
-        cost_to_go = 0
-        min_node = 0
-        minf = 100000000
-
-        while self.open: #current_node != self.tid:
-            frontier = self.planningEnv.get_successors(current_node)
-
-            minf = 100000000
-
-            min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
-            current_node  = min_key
-
-            #frontier = self.planningEnv.get_successors(current_node)
-
-            if current_node == self.tid:
-                break
-
-            for neighbor in frontier:
-
-                #if neighbor in self.open
-                if neighbor not in self.closed:
-
-                #neigh_to_target = self.planningEnv.get_distance(neighbor, self.tid)
-                    start_to_neigh = self.planningEnv.get_distance(current_node, neighbor)
-                    cost_to_come = start_to_neigh
-
-                    cost_to_go = self.planningEnv.get_heuristic(neighbor, self.tid)
-
-                    f = numpy.float64(cost_to_come + cost_to_go)
-
-                    self.open[current_node] = f
-
-                    n_config = self.planningEnv.get_config(neighbor)
-                    cur_n_config = self.planningEnv.get_config(current_node)
-
-                    if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
-                        if f < minf:
-                            minf = f
-                            min_node = neighbor
-
-            del self.open[current_node]
-            self.open[min_node] = f
-            self.closed[current_node] = f
-            self.parent[min_node] = current_node
-
-            current_node = min_node
-
-
-           #self.sid = current_node
-
-        solution = self.get_solution(self.tid)
-
-
-
         # ------------------------------------------------------------
         # YOUR CODE HERE
         #
@@ -100,7 +42,56 @@ class HaltonPlanner(object):
         #   of node ids, get_solution() will compute the actual path in SE(2) based off of
         #   the node ids that you have found.
         # -------------------------------------------------------------
-        #print solution
+
+        # Continue searching while open set is not empty
+        while self.open: #current_node != self.tid:
+
+            # Set current_node to lowest cost in open set
+            min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
+            current_node  = min_key
+
+            # If current node is goal, we're done!
+            if current_node == self.tid:
+                break
+
+            # Else remove the current node from open and continue
+            del self.open[current_node]
+
+            # Get the frontier, set of neighbors in current node
+            # Circle the wagons... 
+            frontier = self.planningEnv.get_successors(current_node)
+
+            for neighbor in frontier:
+
+                if neighbor not in self.closed:
+
+                    # Check first for a valid path to neighbor
+                    n_config = self.planningEnv.get_config(neighbor)
+                    cur_n_config = self.planningEnv.get_config(current_node)
+
+                    if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
+
+                        # Calculate distance from start to neighbor thorugh current
+                        d = self.planningEnv.get_distance(current_node, neighbor) #start_to_neigh
+                        g = self.gValues[current_node] + d
+
+                        # If distance is less than existing gValue, record it!
+                        if (neighbor not in self.gValues) or (g < self.gValues[neighbor]):
+
+                            self.gValues[neighbor] = g
+                            self.parent[neighbor] = current_node
+
+                            h = self.planningEnv.get_heuristic(neighbor, self.tid)
+
+                            f = numpy.float64(g + h) # Total cost f = g + h
+
+                            self.open[neighbor] = f
+
+            # Close current node
+            self.closed[current_node] = f
+
+        solution = self.get_solution(self.tid)
+
         return solution
 
     # Try to improve the current plan by repeatedly checking if there is a shorter path between random pairs of points in the path
