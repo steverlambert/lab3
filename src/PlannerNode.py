@@ -195,9 +195,9 @@ class PlannerNode(object):
       self.environment.set_source_and_target(source_pose, target_pose)
 
       print '[Planner Node] Computing plan...'
-      #self.cur_plan = self.planner.plan()
+      self.cur_plan = self.planner.plan()
       #self.cur_plan = self.planner.planLazyA()
-      self.cur_plan = self.planner.planLazySP()
+      #self.cur_plan = self.planner.planLazySP()
 
       print '[Planner Node] ...plan done post processing now'
 
