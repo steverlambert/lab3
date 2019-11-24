@@ -58,7 +58,7 @@ class HaltonPlanner(object):
             del self.open[current_node]
 
             # Get the frontier, set of neighbors in current node
-            # Circle the wagons... 
+            # Circle the wagons...
             frontier = self.planningEnv.get_successors(current_node)
 
             for neighbor in frontier:
@@ -94,6 +94,67 @@ class HaltonPlanner(object):
 
         return solution
 
+    def planLazySP(self):
+        self.sid = self.planningEnv.graph.number_of_nodes() - 2  # Get source id
+        self.tid = self.planningEnv.graph.number_of_nodes() - 1  # Get target id
+
+        self.closed = {}  # The closed list
+        self.parent = {self.sid: None}  # A dictionary mapping children to their parents
+        self.open = {self.sid: 0 + self.planningEnv.get_heuristic(self.sid, self.tid)}  # The open list
+        self.gValues = {self.sid: 0}  # A mapping from node to shortest found path length to that node
+        self.planIndices = []
+        self.cost = 0
+
+        #init current_node
+        current_node = self.sid
+
+        # Continue searching while open set is not empty
+        while current_node != self.tid:
+
+            # Find the best neighbor
+            min_key = min(self.open.keys(), key = (lambda k: self.open[k]))
+
+            #check edge
+            n_config = self.planningEnv.get_config(current_node)
+            cur_n_config = self.planningEnv.get_config(min_key)
+
+            if self.planningEnv.manager.get_edge_validity(n_config, cur_n_config):
+                #close the current_node and delete the min node from open
+                self.closed[current_node] = 0
+                del self.open[min_key]
+
+                #make the current node the best key
+                current_node  = min_key
+
+                #print "going forward no collision"
+
+                # reset opens to new neighbors
+                frontier = self.planningEnv.get_successors(current_node)
+
+                # set weights for each neighbor
+                for neighbor in frontier:
+                    if neighbor not in self.closed:
+                        # Calculate distance from start to neighbor thorugh current
+                        d = self.planningEnv.get_distance(current_node, neighbor) #start_to_neigh
+                        g = self.gValues[current_node] + d
+                        h = self.planningEnv.get_heuristic(neighbor, self.tid)
+                        f = numpy.float64(g + h) # Total cost f = g + h
+
+                        #set g, set parent, set opens
+                        self.gValues[neighbor] = g
+                        self.parent[neighbor] = current_node
+                        self.open[neighbor] = f
+
+            else:
+                #print "found a collision"
+
+                #set the collision node to be huge
+                self.open[min_key] += 1000000000000
+
+        solution = self.get_solution(self.tid)
+
+        return solution
+
 
     # Lazy A*
     # Update to delay collision check until the last possible moment
@@ -123,7 +184,7 @@ class HaltonPlanner(object):
             del self.open[current_node]
 
             # Get the frontier, set of neighbors in current node
-            # Circle the wagons... 
+            # Circle the wagons...
             frontier = self.planningEnv.get_successors(current_node)
 
             for neighbor in frontier:
